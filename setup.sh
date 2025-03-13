@@ -20,9 +20,16 @@ fi
 if [[ "$SHELL" == "/bin/zsh" ]]; then
     PROFILE_FILE="$HOME/.zshrc"
     FUNCTIONS_FILE="$FUNCTIONS_DIR/zsh"
+    RELOAD_FUNCTIONS="precmd_functions+=check_reload_functions"
 elif [[ "$SHELL" == "/bin/bash" ]]; then
     PROFILE_FILE="$HOME/.bashrc"
     FUNCTIONS_FILE="$FUNCTIONS_DIR/bash"
+    RELOAD_FUNCTIONS="
+    if [[ -z \"\$PROMPT_COMMAND\" ]]; then
+        PROMPT_COMMAND=\"check_reload_functions\"
+    else
+        PROMPT_COMMAND=\"check_reload_functions; \$PROMPT_COMMAND\"
+    fi"
 else
     echo "Unsupported shell: $SHELL"
     exit 1
