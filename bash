@@ -15,7 +15,7 @@ describe() {
 ,() {
     printf "%-20s | %s\n" "Function Name" "Description"
     printf "%-20s | %s\n" "--------------------" "--------------------"
-    declare -F | awk '{print $3}' | grep -oE '^,[a-zA-Z_][a-zA-Z0-9_]*' | while read -r func; do
+    declare -F | awk '{print $3}' | grep -oE '^,[a-zA-Z_][a-zA-Z0-9_-]*' | while read -r func; do
         desc=$("$func" "true" 2>/dev/null)  # Call each function with "true" and suppress errors
         if [[ -n "$desc" ]]; then
             printf "%-20s | %s\n" "$func" "$desc"
