@@ -7,19 +7,33 @@ FUNCTIONS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 START_MARKER="# Start of functions file loading into shell"
 END_MARKER="# End of functions file loading into shell"
 
+# Detect macOS or Linux using uname command, Darwin vs Linux return, to use proper flags of stat
+if [[ "$(uname)" == "Darwin" ]]; then
+    OS="macOS"
+    STAT_CMD="stat -f %m"  # macOS uses 'stat -f %m' instead of 'stat -c %Y'
+else
+    OS="Linux"
+    STAT_CMD="stat -c %Y"  # Linux uses 'stat -c %Y'
+fi
+
 # Detect the shell and set the correct profile file
 if [[ "$SHELL" == "/bin/zsh" ]]; then
     PROFILE_FILE="$HOME/.zshrc"
     FUNCTIONS_FILE="$FUNCTIONS_DIR/zsh"
-    STAT_CMD="stat -f %m"  # macOS uses 'stat -f %m' instead of 'stat -c %Y'
 elif [[ "$SHELL" == "/bin/bash" ]]; then
     PROFILE_FILE="$HOME/.bashrc"
     FUNCTIONS_FILE="$FUNCTIONS_DIR/bash"
-    STAT_CMD="stat -c %Y"  # Linux uses 'stat -c %Y'
 else
     echo "Unsupported shell: $SHELL"
     exit 1
 fi
+
+# Output for debugging & user verification
+echo -e "\n**********************************"
+echo "Detected OS: $OS"
+echo "Using Profile: $PROFILE_FILE"
+echo "Using Functions File: $FUNCTIONS_FILE"
+echo -e "**********************************\n"
 
 # Run remove.sh before adding a new snippet
 bash "$FUNCTIONS_DIR/remove.sh"
@@ -56,7 +70,7 @@ $END_MARKER"
 # Check if the snippet already exists in the profile file
 if ! grep -q "if [ -f \"$FUNCTIONS_FILE\" ]; then" "$PROFILE_FILE"; then
     echo -e "\n$FUNCTIONS_SNIPPET" >> "$PROFILE_FILE"
-    echo "Added custom functions loading to $PROFILE_FILE"
+    echo "Added custom functions file to load in $PROFILE_FILE"
 else
     echo "Custom functions loading is already present in $PROFILE_FILE"
 fi
@@ -77,10 +91,17 @@ fi
 # Check if DIR= is already defined to avoid duplicates
 if ! grep -q '^DIR=' "$FUNCTIONS_FILE"; then
     echo "Prepending DIR to $FUNCTIONS_FILE"
-    sed -i '1s|^|DIR="'"$FUNCTIONS_DIR"'"\'$'\n|' "$FUNCTIONS_FILE"
+
+    if [[ "$OS" == "macOS" ]]; then
+        sed -i '' '1s|^|DIR="'"$FUNCTIONS_DIR"'"\
+        \n|' "$FUNCTIONS_FILE"
+    else
+        sed -i '1s|^|DIR="'"$FUNCTIONS_DIR"'"\
+        \n|' "$FUNCTIONS_FILE"
+    fi
 fi
 
 # Apply changes immediately
 source "$PROFILE_FILE"
 
-echo "✅ Setup complete! Your shell functions will now auto-reload in $PROFILE_FILE."
+echo "Setup complete! Your shell functions will now auto-reload in $PROFILE_FILE."
