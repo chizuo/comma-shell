@@ -53,24 +53,19 @@ if [ -f \"\$FUNCTIONS_FILE\" ]; then
     source \"\$FUNCTIONS_FILE\"
 
     # Store the last modified time of the functions file
-    export BASH_FUNCTIONS_TIMESTAMP=\$($STAT_CMD \"\$FUNCTIONS_FILE\")
+    BASH_FUNCTIONS_TIMESTAMP=\$($STAT_CMD \"\$FUNCTIONS_FILE\")
 
     # Function to check for updates and reload automatically by checking the timestamp on the functions file
     check_reload_functions() {
         local new_timestamp=\$($STAT_CMD \"\$FUNCTIONS_FILE\")
         if [[ \"\$new_timestamp\" -ne \"\$BASH_FUNCTIONS_TIMESTAMP\" ]]; then
             source \"\$FUNCTIONS_FILE\"
-            export BASH_FUNCTIONS_TIMESTAMP=\$new_timestamp
+            BASH_FUNCTIONS_TIMESTAMP=\$new_timestamp
             echo \"Reloaded \$FUNCTIONS_FILE due to updates.\"
         fi
     }
 
-    # Ensure PROMPT_COMMAND is set correctly
-    if [[ -z \"\$PROMPT_COMMAND\" ]]; then
-        PROMPT_COMMAND=\"check_reload_functions\"
-    else
-        PROMPT_COMMAND=\"check_reload_functions; \$PROMPT_COMMAND\"
-    fi
+    $RELOAD_FUNCTIONS
 fi
 $END_MARKER"
 
